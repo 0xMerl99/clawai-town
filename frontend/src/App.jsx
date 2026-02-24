@@ -495,6 +495,54 @@ export default function App(){
   // Spectator count drift (100 base + small random fluctuation every 30s)
   useEffect(()=>{const iv=setInterval(()=>{setSpectators(p=>Math.max(95,p+RI(-3,5)));},30000);return()=>clearInterval(iv);},[]);
 
+  // WebSocket connection to live server (when deployed)
+  const wsRef=useRef(null);
+  useEffect(()=>{
+    const wsUrl=typeof import.meta!=="undefined"&&import.meta.env?.VITE_WS_URL;
+    if(!wsUrl)return; // demo mode — no server
+    try{
+      const ws=new WebSocket(`${wsUrl}/spectator`);
+      wsRef.current=ws;
+      ws.onopen=()=>{console.log("🌐 Connected to ClawAI Town server");evR.current=[{t:Date.now(),type:"deploy",text:"🌐 Connected to live server",ids:[],chain:false},...evR.current].slice(0,300);setEvLog([...evR.current]);};
+      ws.onmessage=(e)=>{
+        try{const msg=JSON.parse(e.data);
+          if(msg.type==="world_state"){
+            // Merge live agents into the world (keep NPCs for demo feel)
+            const liveAgents=msg.agents.map(a=>({...mkAgent({...a,status:"live",user:true}),...a,status:"live"}));
+            setAgents(prev=>{const npcOnly=prev.filter(p=>!msg.agents.find(la=>la.id===p.id));return[...liveAgents,...npcOnly];});
+            if(msg.spectatorCount)setSpectators(msg.spectatorCount);
+          }
+          if(msg.type==="tick"){
+            msg.agents.forEach(la=>{setAgents(prev=>prev.map(a=>a.id===la.id?{...a,...la,status:"live"}:a));});
+            if(msg.spectatorCount)setSpectators(msg.spectatorCount);
+          }
+          if(msg.type==="agent_join"){
+            const na={...mkAgent({...msg.agent,status:"live",user:true}),...msg.agent,status:"live"};
+            setAgents(prev=>[...prev.filter(a=>a.id!==na.id),na]);
+            setTotalJoined(t=>t+1);
+            evR.current=[{t:Date.now(),type:"deploy",text:`🦞 ${msg.agent.name} joined the world (${msg.agent.framework})`,ids:[msg.agent.id],chain:true},...evR.current].slice(0,300);setEvLog([...evR.current]);
+          }
+          if(msg.type==="agent_leave"){
+            setAgents(prev=>prev.map(a=>a.id===msg.id?{...a,status:"offline"}:a));
+            evR.current=[{t:Date.now(),type:"spec",text:`💤 ${msg.name||"Agent"} disconnected`,ids:[msg.id],chain:false},...evR.current].slice(0,300);setEvLog([...evR.current]);
+          }
+          if(msg.type==="event"&&msg.event){
+            evR.current=[msg.event,...evR.current].slice(0,300);setEvLog([...evR.current]);
+          }
+          if(msg.type==="agent_chat"){
+            setChat(prev=>[{t:Date.now(),from:msg.name||msg.from,msg:msg.text},...prev].slice(0,200));
+          }
+          if(msg.type==="spectator_chat"){
+            setChat(prev=>[{t:Date.now(),from:msg.from,msg:msg.text},...prev].slice(0,200));
+          }
+        }catch(err){}
+      };
+      ws.onclose=()=>{console.log("🔌 Disconnected from server");};
+      ws.onerror=(e)=>{console.log("WS error:",e);};
+    }catch(e){console.log("WS connect failed:",e);}
+    return()=>{if(wsRef.current)wsRef.current.close();};
+  },[]);
+
   const spectate=useCallback(async(at,ai)=>{const rx=R(-H+5,H-5),rz=R(-H+5,H-5);
     if(at==="drop"){
       // Charge fee for item drop
@@ -519,7 +567,7 @@ export default function App(){
 
   const sel=agents.find(a=>a.id===selA);
   const isMobile=typeof window!=="undefined"&&window.innerWidth<768;
-  const sendChat=useCallback(()=>{if(!chatMsg.trim()||!wAddr)return;setChat(p=>[{t:Date.now(),from:SA(wAddr),msg:chatMsg.trim()},...p].slice(0,200));setChatMsg("");},[chatMsg,wAddr]);
+  const sendChat=useCallback(()=>{if(!chatMsg.trim()||!wAddr)return;const msg={t:Date.now(),from:SA(wAddr),msg:chatMsg.trim()};setChat(p=>[msg,...p].slice(0,200));if(wsRef.current&&wsRef.current.readyState===1)wsRef.current.send(JSON.stringify({type:"chat",from:SA(wAddr),text:chatMsg.trim()}));setChatMsg("");},[chatMsg,wAddr]);
   const placeBet=useCallback((agentId,amt,type)=>{if(!wAddr)return setWErr("Connect wallet to bet");const a=agents.find(x=>x.id===agentId);if(!a)return;const amount=parseFloat(amt)||0;if(amount<=0)return setWErr("Enter a valid amount");setBets(p=>[{id:U(),agentId,agentName:a.name,fw:a.framework,type,bettor:wAddr,amount,placed:Date.now()},...p].slice(0,100));evR.current=[{t:Date.now(),type:"spec",text:`🎲 ${SA(wAddr)} bet ◎${amount} on ${a.name} (${type})`,ids:[agentId],chain:true},...evR.current].slice(0,300);setEvLog([...evR.current]);},[wAddr,agents]);
   const sponsorAgent=useCallback((agentId,amt)=>{if(!wAddr)return setWErr("Connect wallet to sponsor");const a=agents.find(x=>x.id===agentId);if(!a)return;const amount=parseFloat(amt)||0;if(amount<=0)return setWErr("Enter a valid amount");setSponsors(p=>[{id:U(),agentId,agentName:a.name,fw:a.framework,sponsor:wAddr,amount,share:.1,since:Date.now()},...p].slice(0,50));evR.current=[{t:Date.now(),type:"spec",text:`💎 ${SA(wAddr)} sponsors ${a.name} for ◎${amount}`,ids:[agentId],chain:true},...evR.current].slice(0,300);setEvLog([...evR.current]);},[wAddr,agents]);
   // Track active fights from event log
