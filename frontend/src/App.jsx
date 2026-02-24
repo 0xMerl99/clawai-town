@@ -451,7 +451,7 @@ export default function App(){
   const[selA,setSelA]=useState(null),[tab,setTab]=useState("world"),[showGuide,setShowGuide]=useState(false);
   const[stats,setStats]=useState({trades:0,vol:0,nrg:0,fights:0,txs:0}),[ticks,setTicks]=useState(0),[sTab,setSTab]=useState("events");
   const[wAddr,setWAddr]=useState(null),[wBal,setWBal]=useState(0),[solOk,setSolOk]=useState(false),[wErr,setWErr]=useState(null);
-  const[autoRot,setAutoRot]=useState(true),[showSidebar,setShowSidebar]=useState(true),[chat,setChat]=useState([]),[chatMsg,setChatMsg]=useState("");
+  const[autoRot,setAutoRot]=useState(true),[showSidebar,setShowSidebar]=useState(false),[chat,setChat]=useState([]),[chatMsg,setChatMsg]=useState("");
   const[feedPaused,setFeedPaused]=useState(false),[pausedEvLog,setPausedEvLog]=useState([]),[newEvCount,setNewEvCount]=useState(0);
   const[chatPaused,setChatPaused]=useState(false),[pausedChat,setPausedChat]=useState([]),[newMsgCount,setNewMsgCount]=useState(0);
   const feedRef=useRef(null),chatRef=useRef(null);
@@ -684,13 +684,13 @@ export default function App(){
           {wAddr&&<div style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:K.sD,borderRadius:5,fontSize:10}}><div style={{width:5,height:5,borderRadius:"50%",background:K.ac}}/><span style={{color:K.so}}>◎{wBal.toFixed(3)}</span>{!isMobile&&<span style={{color:K.mu}}>{SA(wAddr)}</span>}</div>}
           {["world","docs"].map(t=><div key={t} style={{padding:isMobile?"5px 8px":"6px 12px",cursor:"pointer",fontSize:isMobile?10:11,color:tab===t?K.ac:K.dm,borderRadius:5,background:tab===t?K.aD:"transparent",border:`1px solid ${tab===t?"rgba(0,255,163,0.12)":"transparent"}`}} onClick={()=>setTab(t)}>{t==="world"?"🌐 World":"📖 Docs"}</div>)}
           <button style={{padding:isMobile?"5px 8px":"6px 14px",background:"linear-gradient(135deg, #ff2222, #ff8800)",color:"#fff",fontFamily:"inherit",fontSize:isMobile?9:11,fontWeight:600,border:"none",borderRadius:5,cursor:"pointer",whiteSpace:"nowrap"}} onClick={()=>setShowGuide(true)}>🦞 {isMobile?"Join":"Join the World"}</button>
-          {isMobile&&<button style={{padding:"5px 7px",background:K.cd,color:K.dm,fontFamily:"inherit",fontSize:11,border:`1px solid ${K.bd}`,borderRadius:5,cursor:"pointer"}} onClick={()=>setShowSidebar(!showSidebar)}>☰</button>}
+          {isMobile&&<button style={{padding:"5px 7px",background:showSidebar?K.ac+"22":K.cd,color:showSidebar?K.ac:K.dm,fontFamily:"inherit",fontSize:11,border:`1px solid ${showSidebar?K.ac+"44":K.bd}`,borderRadius:5,cursor:"pointer"}} onClick={()=>setShowSidebar(!showSidebar)}>{showSidebar?"✕":"☰"}</button>}
         </div>
       </div>
       {wErr&&<div style={{padding:"6px 20px",background:"rgba(255,51,51,0.08)",borderBottom:"1px solid rgba(255,51,51,0.2)",fontSize:11,color:K.dn,display:"flex",justifyContent:"space-between"}}><span>⚠️ {wErr}</span><span style={{cursor:"pointer"}} onClick={()=>setWErr(null)}>✕</span></div>}
 
       <div style={{display:"flex",flex:1,overflow:"hidden",flexDirection:isMobile?"column":"row"}}>
-        <div style={{flex:1,position:"relative",minHeight:isMobile?"50vh":"auto"}}>
+        <div style={{flex:1,position:"relative",minHeight:isMobile?(showSidebar?"35vh":"60vh"):"auto"}}>
           <World agents={agents} buildings={bld} resources={res} wEvts={wEvts} items={items} selAgent={selA} onSel={id=>setSelA(id===selA?null:id)} autoRotate={autoRot}/>
           <div style={{position:"absolute",top:12,left:12,display:"flex",alignItems:"center",gap:6,padding:"5px 12px",background:"rgba(10,11,16,0.85)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,34,34,0.3)",borderRadius:6,zIndex:5}}>
             <span style={{width:8,height:8,borderRadius:"50%",background:"#ff2222",boxShadow:"0 0 8px #ff2222",animation:"pulse 1.5s infinite"}}></span>
@@ -725,9 +725,9 @@ export default function App(){
           </div>
         </div>
 
-        {(showSidebar||!isMobile)&&<div style={{width:sideW,maxHeight:isMobile?"50vh":"none",borderLeft:isMobile?"none":`1px solid ${K.bd}`,borderTop:isMobile?`1px solid ${K.bd}`:"none",background:K.pn,display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0}}>
+        {(showSidebar||!isMobile)&&<div style={{width:isMobile?"100%":sideW,maxHeight:isMobile?"55vh":"none",borderLeft:isMobile?"none":`1px solid ${K.bd}`,borderTop:isMobile?`1px solid ${K.bd}`:"none",background:K.pn,display:"flex",flexDirection:"column",overflow:"hidden",flexShrink:0,position:isMobile?"relative":"static",zIndex:isMobile?20:1}}>
           <div style={{display:"flex",borderBottom:`1px solid ${K.bd}`,flexShrink:0}}>
-            {["events","act","fight","mybets","chat","agents"].map(t=><div key={t} style={{flex:1,padding:"10px 2px",textAlign:"center",fontSize:9,cursor:"pointer",color:sTab===t?K.tx:K.mu,borderBottom:sTab===t?`2px solid ${t==="fight"?K.dn:t==="mybets"?K.ye:K.ac}`:"2px solid transparent",background:sTab===t?"rgba(0,255,163,0.03)":"transparent"}} onClick={()=>setSTab(t)}>{t==="events"?"Feed":t==="act"?"⚡":t==="fight"?"⚔️":t==="mybets"?"💰":t==="chat"?"💬":"🏆"}</div>)}
+            {["events","act","fight","mybets","chat","agents"].map(t=><div key={t} style={{flex:1,padding:isMobile?"12px 2px":"10px 2px",textAlign:"center",fontSize:isMobile?11:9,cursor:"pointer",color:sTab===t?K.tx:K.mu,borderBottom:sTab===t?`2px solid ${t==="fight"?K.dn:t==="mybets"?K.ye:K.ac}`:"2px solid transparent",background:sTab===t?"rgba(0,255,163,0.03)":"transparent"}} onClick={()=>setSTab(t)}>{t==="events"?"Feed":t==="act"?"⚡":t==="fight"?"⚔️":t==="mybets"?"💰":t==="chat"?"💬":"🏆"}</div>)}
           </div>
           <div style={{flex:1,overflowY:"auto",padding:12}}>
             {sTab==="events"&&<div style={{position:"relative",height:"100%",display:"flex",flexDirection:"column"}}>
@@ -930,13 +930,13 @@ export default function App(){
       </div>
 
       {/* Footer */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:isMobile?"0 8px":"0 16px",height:28,borderTop:`1px solid ${K.bd}`,background:K.pn,flexShrink:0,zIndex:10,gap:8,fontSize:10}}>
-        <div style={{display:"flex",alignItems:"center",gap:isMobile?6:14}}>
-          <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:5,height:5,borderRadius:"50%",background:"#22ff88"}}/><span style={{color:K.ac}}>{onlineCount}</span><span style={{color:K.mu}}>online agents</span></div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:isMobile?"0 8px":"0 16px",height:isMobile?36:28,paddingBottom:isMobile?"env(safe-area-inset-bottom, 8px)":"0",borderTop:`1px solid ${K.bd}`,background:K.pn,flexShrink:0,zIndex:30,gap:8,fontSize:isMobile?8:10,position:"relative"}}>
+        <div style={{display:"flex",alignItems:"center",gap:isMobile?4:14,flexWrap:"nowrap",overflow:"hidden"}}>
+          <div style={{display:"flex",alignItems:"center",gap:3}}><div style={{width:5,height:5,borderRadius:"50%",background:"#22ff88"}}/><span style={{color:K.ac}}>{onlineCount}</span><span style={{color:K.mu}}>{isMobile?"agents":"online agents"}</span></div>
           <span style={{color:K.bd}}>|</span>
-          <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{color:K.so}}>{spectators}</span><span style={{color:K.mu}}>spectators</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{color:K.so}}>{spectators}</span><span style={{color:K.mu}}>{isMobile?"viewers":"spectators"}</span></div>
           <span style={{color:K.bd}}>|</span>
-          <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{color:K.ye}}>{totalJoined}</span><span style={{color:K.mu}}>total AI created</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{color:K.ye}}>{totalJoined}</span><span style={{color:K.mu}}>{isMobile?"total":"total AI created"}</span></div>
           {!isMobile&&<><span style={{color:K.bd}}>|</span>
           <span style={{color:K.mu}}>Tick #{ticks}</span>
           <span style={{color:K.bd}}>|</span>
