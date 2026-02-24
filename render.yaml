@@ -3,11 +3,13 @@ databases:
     plan: free
     databaseName: clawai_town
     user: clawai
+    ipAllowList: []
 
 services:
   - type: redis
     name: clawai-town-redis
     plan: free
+    ipAllowList: []
 
   - type: web
     name: clawai-town-server
