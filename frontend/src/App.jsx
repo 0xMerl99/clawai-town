@@ -456,7 +456,7 @@ export default function App(){
   const[volume,setVolume]=useState(0.3),[muted,setMuted]=useState(true);
   // contract address copy state
   const [copied, setCopied] = useState(false);
-  const CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112";
+  const CONTRACT_ADDRESS = "EWJuL9Lk4y8UdSYfKyUK9RzyePaqP78SHLiF8Y3Vpump";
   const copyToClipboard = () => {
     navigator.clipboard.writeText(CONTRACT_ADDRESS);
     setCopied(true);
@@ -696,8 +696,18 @@ export default function App(){
         </div>
         <div style={{display:"flex",alignItems:"center",gap:isMobile?4:6}}>
           {wAddr&&<div style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:K.sD,borderRadius:5,fontSize:10}}><div style={{width:5,height:5,borderRadius:"50%",background:K.ac}}/><span style={{color:K.so}}>◎{wBal.toFixed(3)}</span>{!isMobile&&<span style={{color:K.mu}}>{SA(wAddr)}</span>}</div>}
-          {/* full contract address (desktop) */}
-          {!isMobile&&<span onClick={copyToClipboard} style={{fontFamily:"monospace",color:copied?K.ac:K.dm,cursor:"pointer",marginLeft:4,fontSize:10,whiteSpace:"nowrap",userSelect:"all"}}>{CONTRACT_ADDRESS}</span>}
+          {/* contract address always visible; truncated on mobile */}
+          <span onClick={copyToClipboard} style={{fontFamily:"monospace",color:copied?K.ac:K.dm,cursor:"pointer",marginLeft:4,fontSize:isMobile?9:10,whiteSpace:"nowrap",userSelect:"all"}}>
+            {isMobile?CONTRACT_ADDRESS.slice(0,4)+"..."+CONTRACT_ADDRESS.slice(-4):CONTRACT_ADDRESS}
+          </span>
+
+          {/* X logo link */}
+          <a href="https://x.com/ClawAITown" target="_blank" rel="noopener noreferrer" style={{marginLeft:4,display:"flex",alignItems:"center"}}>
+            <svg viewBox="0 0 24 24" width={isMobile?18:20} height={isMobile?18:20} fill="none" stroke={K.ac} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="0" y1="0" x2="24" y2="24" />
+              <line x1="24" y1="0" x2="0" y2="24" />
+            </svg>
+          </a>
 
           {/* navigation buttons */}
           {[{key:"world",icon:"🌐",label:"World"},{key:"docs",icon:"📖",label:"Docs"}].map(item=>
@@ -705,14 +715,6 @@ export default function App(){
               <span>{item.icon}</span>{!isMobile&&<span style={{marginLeft:4}}>{item.label}</span>}
             </div>
           )}
-
-          {/* X logo link */}
-          <a href="https://twitter.com/clawai" target="_blank" rel="noopener noreferrer" style={{marginLeft:4,display:"flex",alignItems:"center"}}>
-            <svg viewBox="0 0 24 24" width={isMobile?18:20} height={isMobile?18:20} fill="none" stroke={K.ac} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="0" y1="0" x2="24" y2="24" />
-              <line x1="24" y1="0" x2="0" y2="24" />
-            </svg>
-          </a>
 
           <button style={{padding:isMobile?"5px 8px":"6px 14px",background:"linear-gradient(135deg, #ff2222, #ff8800)",color:"#fff",fontFamily:"inherit",fontSize:isMobile?9:11,fontWeight:600,border:"none",borderRadius:5,cursor:"pointer",whiteSpace:"nowrap"}} onClick={()=>setShowGuide(true)}>🦞 {isMobile?"Join":"Join the World"}</button>
           {isMobile&&<button style={{padding:"5px 7px",background:showSidebar?K.ac+"22":K.cd,color:showSidebar?K.ac:K.dm,fontFamily:"inherit",fontSize:11,border:`1px solid ${showSidebar?K.ac+"44":K.bd}`,borderRadius:5,cursor:"pointer"}} onClick={()=>setShowSidebar(!showSidebar)}>{showSidebar?"✕":"☰"}</button>}
