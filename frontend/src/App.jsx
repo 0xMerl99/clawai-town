@@ -690,7 +690,6 @@ export default function App(){
   return(
     <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",background:K.bg,color:K.tx,fontFamily:"'Menlo','SF Mono',monospace",fontSize:13,overflow:"hidden"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:isMobile?"0 10px":"0 20px",height:48,borderBottom:`1px solid ${K.bd}`,background:K.pn,flexShrink:0,zIndex:10}}>
-        {copied&&<div style={{position:"fixed",top:52,right:20,padding:"6px 10px",background:K.ac,color:"#000",borderRadius:4,zIndex:30,fontSize:11}}>Copied</div>}
         <div style={{display:"flex",alignItems:"center",gap:6}}>
           <span style={{fontFamily:"Georgia,serif",fontSize:isMobile?16:20,fontWeight:400,color:K.ac,fontStyle:"italic"}}>ClawAI.Town</span>
           {!isMobile&&<><span style={{fontSize:10,color:K.mu,marginLeft:4}}>v1.1</span><span style={{fontSize:8,color:K.wa,marginLeft:4,padding:"1px 5px",background:"rgba(255,107,74,0.1)",borderRadius:3}}>mainnet</span></>}
@@ -698,13 +697,16 @@ export default function App(){
         <div style={{display:"flex",alignItems:"center",gap:isMobile?4:6}}>
           {wAddr&&<div style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:K.sD,borderRadius:5,fontSize:10}}><div style={{width:5,height:5,borderRadius:"50%",background:K.ac}}/><span style={{color:K.so}}>◎{wBal.toFixed(3)}</span>{!isMobile&&<span style={{color:K.mu}}>{SA(wAddr)}</span>}</div>}
           {/* contract address always visible; truncated on mobile */}
-          <span onClick={copyToClipboard} style={{fontFamily:"monospace",color:copied?K.ac:K.dm,cursor:"pointer",marginLeft:4,fontSize:isMobile?9:10,whiteSpace:"nowrap",userSelect:"all"}}>
-            {isMobile?CONTRACT_ADDRESS.slice(0,4)+"..."+CONTRACT_ADDRESS.slice(-4):CONTRACT_ADDRESS}
-          </span>
+          <div style={{position:"relative",display:"inline-block",marginLeft:8}}>
+            <span onClick={copyToClipboard} style={{fontFamily:"monospace",color:copied?K.ac:K.dm,cursor:"pointer",fontSize:isMobile?9:10,whiteSpace:"nowrap",userSelect:"all"}}>
+              {isMobile?CONTRACT_ADDRESS.slice(0,4)+"..."+CONTRACT_ADDRESS.slice(-4):CONTRACT_ADDRESS}
+            </span>
+            {copied&&<div style={{position:"absolute",top:"50%",right:"100%",transform:"translate(0,-50%)",marginRight:6,padding:"4px 8px",background:K.ac,color:"#000",borderRadius:4,fontSize:11}}>Copied</div>}
+          </div>
 
           {/* X logo link */}
-          <a href="https://x.com/ClawAITown" target="_blank" rel="noopener noreferrer" style={{marginLeft:4,display:"flex",alignItems:"center"}}>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/X_logo.png" alt="X" style={{width:isMobile?18:20,height:isMobile?18:20}} />
+          <a href="https://x.com/ClawAITown" target="_blank" rel="noopener noreferrer" style={{marginLeft:8,display:"flex",alignItems:"center"}}>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/X_logo.png" alt="X" style={{width:isMobile?18:20,height:isMobile?18:20}} onError={e=>{e.style.display='none';}} />
           </a>
 
           {/* navigation buttons */}
