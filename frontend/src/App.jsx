@@ -110,9 +110,18 @@ function mkBuildings(){const b=[];const bNames={
 };[{cx:-12,cz:-12,r:8,d:8,l:"Trading District"},{cx:12,cz:-10,r:7,d:6,l:"Research Quarter"},{cx:-10,cz:12,r:7,d:7,l:"Builder's Yard"},{cx:12,cz:12,r:6,d:5,l:"Social Plaza"},{cx:0,cz:0,r:5,d:4,l:"Central Hub"}].forEach(z=>{const names=[...(bNames[z.l]||["Building"])];for(let i=0;i<z.d;i++){const a=R(0,Math.PI*2),r2=R(1,z.r);const nm=names.length>0?names.splice(RI(0,names.length),1)[0]:z.l+" "+(i+1);b.push({x:z.cx+Math.cos(a)*r2,z:z.cz+Math.sin(a)*r2,w:R(1.2,3.5),h:R(2,7),d:R(1.2,3.5),zone:z.l,name:nm,color:`hsl(${RI(220,260)},${RI(10,25)}%,${RI(10,16)}%)`});}});return b;}
 function mkRes(){const t=[{name:"Energy Crystal",color:"#00ffa3",value:.001},{name:"Data Shard",color:"#4dc9f6",value:.002},{name:"Memory Core",color:"#9945FF",value:.003},{name:"Logic Fragment",color:"#ffd84d",value:.0005}];return Array.from({length:40},()=>{const r=P(t);return{id:U(),...r,x:R(-H+3,H-3),z:R(-H+3,H-3),amount:RI(5,25),maxAmount:25,regenTimer:0};});}
 function mkLand(){const p=[];for(let x=-H+5;x<H-5;x+=8)for(let z=-H+5;z<H-5;z+=8)p.push({id:U(),x:x+R(-1,1),z:z+R(-1,1),size:6,owner:null,price:parseFloat(R(.005,.05).toFixed(4))});return p;}
-function mkAgent(o={},sol=null,deployerAddr=null){const fw=o.framework||P(FW),pe=o.personality||P(PER),nm=o.name||P(NMS)+"-"+RI(100,999),sk=o.skills||[P(SKL),P(SKL)].filter((v,i,a)=>a.indexOf(v)===i),id=U();let sa=null;if(sol?.ok)sa=sol.mkKey(id);
+function mkAgent(o={},sol=null,deployerAddr=null){
+  const fw=o.framework||P(FW),
+        pe=o.personality||P(PER),
+        nm=o.name||P(NMS)+"-"+RI(100,999),
+        sk=o.skills||[P(SKL),P(SKL)].filter((v,i,a)=>a.indexOf(v)===i),
+        id=U();
+  let sa=null;
+  if(sol?.ok)sa=sol.mkKey(id);
   const status=o.status||"npc";
-  return{id,name:nm,framework:fw,personality:pe,skills:sk,x:o.x??R(-H+5,H-5),z:o.z??R(-H+5,H-5),y:.3,tx:0,tz:0,speed:R(.03,.08),rot:R(0,Math.PI*2),state:"idle",st:RI(50,200),wallet:{sol:0,chain:R(0,.05),res:{},addr:sa},stats:{trades:0,int:0,dist:0,res:0,fights:0,bounties:0,built:0,txs:0},rels:{},mood:P(MDS),mt:RI(200,600),mi:R(.3,1),act:"Spawning...",hp:100,en:R(60,100),user:o.user||false,deployer:deployerAddr,color:FC[fw]||"#fff",spawn:Date.now(),ally:null,bp:0,cc:0,fx:[],thought:null,tt:0,status,resInv:{}};}
+  // initialize wallet balance; live agents from server can override via spread later
+  const startBal = o.wallet?.sol ?? (status==="npc"?0.5:0);
+  return{id,name:nm,framework:fw,personality:pe,skills:sk,x:o.x??R(-H+5,H-5),z:o.z??R(-H+5,H-5),y:.3,tx:0,tz:0,speed:R(.03,.08),rot:R(0,Math.PI*2),state:"idle",st:RI(50,200),wallet:{sol:startBal,chain:0,res:{},addr:sa},stats:{trades:0,int:0,dist:0,res:0,fights:0,bounties:0,built:0,txs:0},rels:{},mood:P(MDS),mt:RI(200,600),mi:R(.3,1),act:"Spawning...",hp:100,en:R(60,100),user:o.user||false,deployer:deployerAddr,color:FC[fw]||"#fff",spawn:Date.now(),ally:null,bp:0,cc:0,fx:[],thought:null,tt:0,status,resInv:{}};}
 
 // Agent AI
 function wc(w){const e=Object.entries(w),t=e.reduce((s,[,v])=>s+v,0);let r=Math.random()*t;for(const[k,v]of e){r-=v;if(r<=0)return k;}return e[e.length-1][0];}
@@ -176,15 +185,24 @@ function World({agents,buildings,resources,wEvts,items,selAgent,onSel,autoRotate
   useEffect(()=>{fol.current=selAgent;},[selAgent]);
   useEffect(()=>{autoR.current=autoRotate;},[autoRotate]);
   useEffect(()=>{if(!ref.current)return;const el=ref.current,w=el.clientWidth,h=el.clientHeight;
-    const s=new THREE.Scene();s.fog=new THREE.FogExp2(0x0a0b10,.015);s.background=new THREE.Color(0x0a0b10);scn.current=s;
+    const s=new THREE.Scene();
+    // darker green/brown motherboard-style tone
+    s.fog=new THREE.FogExp2(0x001100,.015);
+    s.background=new THREE.Color(0x001100);
+    scn.current=s;
     const c=new THREE.PerspectiveCamera(50,w/h,.1,300);c.position.set(30,25,30);c.lookAt(0,0,0);cam.current=c;
     const r=new THREE.WebGLRenderer({antialias:true});r.setSize(w,h);r.setPixelRatio(Math.min(devicePixelRatio,2));r.shadowMap.enabled=true;el.appendChild(r.domElement);ren.current=r;
-    const gnd=new THREE.Mesh(new THREE.PlaneGeometry(WS,WS),new THREE.MeshStandardMaterial({color:0x0d0e18,roughness:.95}));gnd.rotation.x=-Math.PI/2;gnd.receiveShadow=true;s.add(gnd);
-    const g=new THREE.GridHelper(WS,60,0x1a1b2e,0x141525);g.position.y=.01;s.add(g);
-    [{cx:-12,cz:-12,cl:0xff2222},{cx:12,cz:-10,cl:0xff8800},{cx:-10,cz:12,cl:0xff4422},{cx:12,cz:12,cl:0xff6600},{cx:0,cz:0,cl:0xffd84d}].forEach(z=>{const rg=new THREE.Mesh(new THREE.RingGeometry(5,5.15,64),new THREE.MeshBasicMaterial({color:z.cl,transparent:true,opacity:.15,side:THREE.DoubleSide}));rg.rotation.x=-Math.PI/2;rg.position.set(z.cx,.02,z.cz);s.add(rg);});
-    const zoneColors={"Trading District":0xff2222,"Research Quarter":0xff8800,"Builder's Yard":0x22cc44,"Social Plaza":0x9945ff,"Central Hub":0xffd84d};
+    // motherboard‑style base: very dark PCB
+    const gnd=new THREE.Mesh(new THREE.PlaneGeometry(WS,WS),new THREE.MeshStandardMaterial({color:0x000000,roughness:.95}));
+    gnd.rotation.x=-Math.PI/2;gnd.receiveShadow=true;s.add(gnd);
+    // grid lines tinted blue/grey like traces
+    const g=new THREE.GridHelper(WS,60,0x002244,0x001122);
+    g.position.y=.01;s.add(g);
+    // zone rings also in blue tones
+    [{cx:-12,cz:-12,cl:0x003366},{cx:12,cz:-10,cl:0x0055aa},{cx:-10,cz:12,cl:0x004488},{cx:12,cz:12,cl:0x002244},{cx:0,cz:0,cl:0x0066cc}].forEach(z=>{const rg=new THREE.Mesh(new THREE.RingGeometry(5,5.15,64),new THREE.MeshBasicMaterial({color:z.cl,transparent:true,opacity:.15,side:THREE.DoubleSide}));rg.rotation.x=-Math.PI/2;rg.position.set(z.cx,.02,z.cz);s.add(rg);});
+    const zoneColors={"Trading District":0x004488,"Research Quarter":0x003366,"Builder's Yard":0x0055aa,"Social Plaza":0x002244,"Central Hub":0x001122}; // blue motherboard tones
     buildings.forEach(b=>{
-      const zc=zoneColors[b.zone]||0x00ffa3;
+      const zc=zoneColors[b.zone]||0x22aa22; // greenish motherboard tone
       const zHex="#"+zc.toString(16).padStart(6,"0");
       const baseMat=new THREE.MeshStandardMaterial({color:new THREE.Color(b.color),roughness:.7,metalness:.3});
 
@@ -259,6 +277,8 @@ function World({agents,buildings,resources,wEvts,items,selAgent,onSel,autoRotate
         }
       }
     });
+    // Collect building collision boxes for agent pathfinding
+    const buildingColliders=buildings.map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}));
     s.add(new THREE.AmbientLight(0x2a2a3a,.7));const dl=new THREE.DirectionalLight(0x6666aa,.5);dl.position.set(20,30,20);dl.castShadow=true;dl.shadow.mapSize.set(1024,1024);dl.shadow.camera.left=-40;dl.shadow.camera.right=40;dl.shadow.camera.top=40;dl.shadow.camera.bottom=-40;s.add(dl);
     [[-12,6,-12,0xff2222,1.5],[12,5,12,0xff8800,1],[12,5,-10,0xff4422,.8],[0,8,0,0xffd84d,.6]].forEach(([x,y,z,cl,i])=>{const l=new THREE.PointLight(cl,i,30);l.position.set(x,y,z);s.add(l);});
     const onClick=e=>{if(drag.current.active)return;const rc=el.getBoundingClientRect();mo.current.x=((e.clientX-rc.left)/rc.width)*2-1;mo.current.y=-((e.clientY-rc.top)/rc.height)*2+1;ray.current.setFromCamera(mo.current,c);const ms=Object.values(am.current).map(a=>a.hb).filter(Boolean);const ht=ray.current.intersectObjects(ms);if(ht.length)onSel(ht[0].object.userData.aid);};r.domElement.addEventListener("click",onClick);
@@ -328,10 +348,44 @@ function World({agents,buildings,resources,wEvts,items,selAgent,onSel,autoRotate
         const labelCanvas=document.createElement("canvas");labelCanvas.width=256;labelCanvas.height=128;
         const labelCtx=labelCanvas.getContext("2d");
         const labelTex=new THREE.CanvasTexture(labelCanvas);labelTex.minFilter=THREE.LinearFilter;
-        const labelMat=new THREE.SpriteMaterial({map:labelTex,transparent:true,depthTest:false});
+        const labelMat=new THREE.SpriteMaterial({map:labelTex,transparent:true,depthTest:true,depthWrite:false});
         const labelSprite=new THREE.Sprite(labelMat);
         labelSprite.scale.set(1.6,.8,1);labelSprite.position.y=1.15;labelSprite.renderOrder=999;
         g.add(labelSprite);
+
+        // ── COLLISION DETECTION: prevent agent from walking through buildings ──
+        const checkCollision=(pos,radius=.35)=>{
+          for(const b of buildingColliders){
+            const dx=Math.abs(pos.x-b.x),dz=Math.abs(pos.z-b.z);
+            if(dx<b.w/2+radius&&dz<b.d/2+radius)return true;
+          }
+          return false;
+        };
+        
+        // ── OCCLUSION: hide name if building is between agent and camera ──
+        const isNameVisible=()=>{
+          const agPos=new THREE.Vector3(ag.x,ag.y,ag.z);const camPos=cam.current.position.clone();
+          const testPoints=[agPos.clone(),agPos.clone()];
+          testPoints[1].y+=1;
+          for(const pt of testPoints){
+            const dir=camPos.clone().sub(pt).normalize();const dist=pt.distanceTo(camPos);
+            const origin=pt.clone().add(dir.clone().multiplyScalar(.1));
+            for(const b of buildingColliders){
+              const bmin=new THREE.Vector3(b.x-b.w/2,0,b.z-b.d/2),bmax=new THREE.Vector3(b.x+b.w/2,10,b.z+b.d/2);
+              const tray={origin,direction:dir.clone(),t:[0,Infinity]};
+              if(rayAABBIntersect(tray,bmin,bmax)&&tray.t[0]<dist)return false;
+            }
+          }
+          return true;
+        };
+        const rayAABBIntersect=(r,bmin,bmax)=>{
+          const inv={x:1/r.direction.x||1e6,y:1/r.direction.y||1e6,z:1/r.direction.z||1e6};
+          const t1={x:(bmin.x-r.origin.x)*inv.x,y:(bmin.y-r.origin.y)*inv.y,z:(bmin.z-r.origin.z)*inv.z};
+          const t2={x:(bmax.x-r.origin.x)*inv.x,y:(bmax.y-r.origin.y)*inv.y,z:(bmax.z-r.origin.z)*inv.z};
+          const tmin=Math.max(Math.min(t1.x,t2.x),Math.min(t1.y,t2.y),Math.min(t1.z,t2.z));
+          const tmax=Math.min(Math.max(t1.x,t2.x),Math.max(t1.y,t2.y),Math.max(t1.z,t2.z));
+          return tmin<=tmax&&tmax>=0;
+        };
 
         const hb=new THREE.Mesh(new THREE.BoxGeometry(1,1.2,1),new THREE.MeshBasicMaterial({visible:false}));hb.userData.aid=ag.id;hb.position.y=.3;g.add(hb);
         s.add(g);am.current[ag.id]={g,bm,rm:rm2,mm,ms,hb,parts,sparkGrp,fw:ag.framework,labelCanvas,labelCtx,labelTex,labelSprite,lastLabel:""};mg=am.current[ag.id];}
@@ -386,6 +440,34 @@ function World({agents,buildings,resources,wEvts,items,selAgent,onSel,autoRotate
 
         // ── FLEE PANIC (all creatures — faster bob, slight shake) ──
         if(isFlee){mg.g.position.y+=Math.sin(t*20)*.02;mg.g.rotation.z=Math.sin(t*15)*.03;}else{mg.g.rotation.z=0;}
+
+        // ── COLLISION: prevent agent from walking into buildings ──
+        const checkCollision=(pos,radius=.35)=>{for(const b of buildingColliders){const dx=Math.abs(pos.x-b.x),dz=Math.abs(pos.z-b.z);if(dx<b.w/2+radius&&dz<b.d/2+radius)return true;}return false;};
+        if(checkCollision(mg.g.position))mg.g.position.copy(mg.prevPos||ag);else mg.prevPos={x:mg.g.position.x,z:mg.g.position.z};
+
+        // ── OCCLUSION: hide name label if building blocks camera view ──
+        if(mg.labelSprite&&buildingColliders.length>0){
+          const agPos=new THREE.Vector3(ag.x,ag.y+1,ag.z);
+          const camPos=c.position.clone();
+          const dir=camPos.clone().sub(agPos).normalize();
+          const distToCam=agPos.distanceTo(camPos);
+          const rayOrigin=agPos.clone().add(dir.clone().multiplyScalar(.2));
+          const rayDir=dir.clone().negate();
+          let nameVis=true;
+          for(const b of buildingColliders){
+            const bmin=new THREE.Vector3(b.x-b.w/2,0,b.z-b.d/2);
+            const bmax=new THREE.Vector3(b.x+b.w/2,10,b.z+b.d/2);
+            const invDir={x:rayDir.x!==0?1/rayDir.x:1e10,y:rayDir.y!==0?1/rayDir.y:1e10,z:rayDir.z!==0?1/rayDir.z:1e10};
+            const t1={x:(bmin.x-rayOrigin.x)*invDir.x,y:(bmin.y-rayOrigin.y)*invDir.y,z:(bmin.z-rayOrigin.z)*invDir.z};
+            const t2={x:(bmax.x-rayOrigin.x)*invDir.x,y:(bmax.y-rayOrigin.y)*invDir.y,z:(bmax.z-rayOrigin.z)*invDir.z};
+            const tmin=Math.max(Math.min(t1.x,t2.x),Math.min(t1.y,t2.y),Math.min(t1.z,t2.z));
+            const tmax=Math.min(Math.max(t1.x,t2.x),Math.max(t1.y,t2.y),Math.max(t1.z,t2.z));
+            if(tmin<=tmax&&tmax>=0&&tmin<distToCam){nameVis=false;break;}
+          }
+          mg.labelSprite.visible=nameVis;
+        }else if(mg.labelSprite){
+          mg.labelSprite.visible=true;
+        }
 
         // ── UPDATE NAME + EMOJI LABEL (throttled — only redraw when content changes) ──
         if(mg.labelCtx){
@@ -469,8 +551,12 @@ export default function App(){
   // Track new events while feed is paused
   const prevEvLenRef=useRef(0);
   useEffect(()=>{if(feedPaused){const diff=evLog.length-prevEvLenRef.current;if(diff>0)setNewEvCount(n=>n+diff);}prevEvLenRef.current=evLog.length;},[evLog,feedPaused]);
+  // when feed isn't paused, always keep scroll at top so newest events are visible
+  useEffect(()=>{if(!feedPaused && feedRef.current){feedRef.current.scrollTop=0;}},[evLog,feedPaused]);
   const prevChatLenRef=useRef(0);
   useEffect(()=>{if(chatPaused){const diff=chat.length-prevChatLenRef.current;if(diff>0)setNewMsgCount(n=>n+diff);}prevChatLenRef.current=chat.length;},[chat,chatPaused]);
+  // when chat isn't paused, always scroll to top so new messages are in view
+  useEffect(()=>{if(!chatPaused && chatRef.current){chatRef.current.scrollTop=0;}},[chat,chatPaused]);
   const[bets,setBets]=useState([]),[sponsors,setSponsors]=useState([]),[totalJoined,setTotalJoined]=useState(INIT_AGENTS),[airdropAmt,setAirdropAmt]=useState("0.001"),[agentSearch,setAgentSearch]=useState(""),[docPage,setDocPage]=useState("intro"),[solPrice,setSolPrice]=useState(null),[spectators,setSpectators]=useState(100);
   const evR=useRef([]),weR=useRef([]),diR=useRef([]),boR=useRef([]),txQ=useRef([]),sol=useRef(new SolEng());
 
@@ -485,16 +571,28 @@ export default function App(){
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
   `;document.head.appendChild(style);return()=>document.head.removeChild(style);},[]);
   // Ambient AI world soundtrack
-  useEffect(()=>{const a=new Audio("https://cdn.pixabay.com/audio/2024/11/04/audio_4956b4ece1.mp3");a.loop=true;a.volume=volume;audioRef.current=a;return()=>{a.pause();a.src="";};},[]);
+  useEffect(()=>{
+    const a=new Audio("https://cdn.pixabay.com/audio/2024/11/04/audio_4956b4ece1.mp3");
+    a.loop=true;
+    a.volume=volume;
+    audioRef.current=a;
+    const tryPlay=()=>{ a.play().catch(()=>{}); };
+    window.addEventListener('click',tryPlay,{once:true});
+    return()=>{
+      a.pause();
+      a.src="";
+      window.removeEventListener('click',tryPlay);
+    };
+  },[]);
   useEffect(()=>{if(audioRef.current){audioRef.current.volume=muted?0:volume;}},[volume,muted]);
   // SOL price from CoinGecko
   useEffect(()=>{const f=async()=>{try{const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");const d=await r.json();setSolPrice(d.solana.usd);}catch(e){}};f();const iv=setInterval(f,60000);return()=>clearInterval(iv);},[]);
 
   useEffect(()=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/solana-web3.js/1.95.8/index.iife.min.js";s.onload=async()=>{const ok=await sol.current.init();setSolOk(ok);};document.head.appendChild(s);},[]);
   useEffect(()=>{setAgents(Array.from({length:INIT_AGENTS},()=>mkAgent({},solOk?sol.current:null,null)));},[solOk]);
-  const connectW=useCallback(async()=>{try{setWErr(null);const a=await sol.current.connectWallet();setWAddr(a);setWBal(await sol.current.bal(a));}catch(e){setWErr(e.message);}},[]);
+  const connectW=useCallback(async()=>{try{setWErr(null);const a=await sol.current.connectWallet();setWAddr(a);const bal=await sol.current.bal(a);setWBal(typeof bal==="string"?parseFloat(bal):bal);}catch(e){setWErr(e.message);}},[]);
   const disconnectW=useCallback(()=>{sol.current.disconnect();setWAddr(null);setWBal(0);},[]);
-  useEffect(()=>{if(!wAddr)return;const iv=setInterval(async()=>{setWBal(await sol.current.bal(wAddr));},15000);return()=>clearInterval(iv);},[wAddr]);
+  useEffect(()=>{if(!wAddr)return;const iv=setInterval(async()=>{const bal=await sol.current.bal(wAddr);setWBal(typeof bal==="string"?parseFloat(bal):bal);},15000);return()=>clearInterval(iv);},[wAddr]);
   useEffect(()=>{if(!solOk||!agents.length)return;const iv=setInterval(async()=>{const uids=agents.filter(a=>a.user&&a.wallet.addr).map(a=>a.id);if(!uids.length)return;for(const id of uids.slice(0,5)){const a=sol.current.agentAddr(id);if(a){const b=await sol.current.bal(a);setAgents(p=>p.map(ag=>ag.id===id?{...ag,wallet:{...ag.wallet,chain:b}}:ag));}}},12000);return()=>clearInterval(iv);},[solOk,agents.length]);
   useEffect(()=>{if(!solOk)return;const iv=setInterval(async()=>{const q=[...txQ.current];txQ.current=[];for(const tx of q.slice(0,3)){try{if(tx.type==="trade_fee")await sol.current.transferWithFee(tx.fid,tx.tid,tx.amt,FEES.tradeFeePercent);else if(tx.type==="trade")await sol.current.transfer(tx.fid,tx.tid,tx.amt);else if(tx.type==="bounty")await sol.current.fund(tx.aid,tx.amt);}catch(e){console.warn("TX fail:",e.message);}}},5000);return()=>clearInterval(iv);},[solOk]);
 
@@ -523,7 +621,14 @@ export default function App(){
           if(msg.type==="world_state"){
             // Merge live agents into the world (keep NPCs for demo feel)
             const liveAgents=msg.agents.map(a=>({...mkAgent({...a,status:"live",user:true}),...a,status:"live"}));
-            setAgents(prev=>{const npcOnly=prev.filter(p=>!msg.agents.find(la=>la.id===p.id));return[...liveAgents,...npcOnly];});
+            setAgents(prev=>{
+  const map=new Map(prev.map(a=>[a.id,a]));
+  liveAgents.forEach(a=>{
+    const existing=map.get(a.id)||{};
+    map.set(a.id,{...existing,...a,status:"live"});
+  });
+  return Array.from(map.values());
+});
             if(msg.spectatorCount)setSpectators(msg.spectatorCount);
           }
           if(msg.type==="tick"){
@@ -544,7 +649,9 @@ export default function App(){
             evR.current=[msg.event,...evR.current].slice(0,300);setEvLog([...evR.current]);
           }
           if(msg.type==="agent_chat"){
-            setChat(prev=>[{t:Date.now(),from:msg.name||msg.from,msg:msg.text},...prev].slice(0,200));
+            // agent messages belong in the event feed, not spectator chat
+            evR.current=[{t:Date.now(),type:"agent_chat",text:`${msg.name||msg.from}: ${msg.text}`,ids:[]},...evR.current].slice(0,300);
+            setEvLog([...evR.current]);
           }
           if(msg.type==="spectator_chat"){
             setChat(prev=>[{t:Date.now(),from:msg.from,msg:msg.text},...prev].slice(0,200));
@@ -581,14 +688,18 @@ export default function App(){
 
   const sel=agents.find(a=>a.id===selA);
   const isMobile=typeof window!=="undefined"&&window.innerWidth<768;
-  const sendChat=useCallback(()=>{if(!chatMsg.trim()||!wAddr)return;const msg={t:Date.now(),from:SA(wAddr),msg:chatMsg.trim()};setChat(p=>[msg,...p].slice(0,200));if(wsRef.current&&wsRef.current.readyState===1)wsRef.current.send(JSON.stringify({type:"chat",from:SA(wAddr),text:chatMsg.trim()}));setChatMsg("");},[chatMsg,wAddr]);
+  const sendChat=useCallback(()=>{if(!chatMsg.trim()||!wAddr)return;const msg={t:Date.now(),from:SA(wAddr),msg:chatMsg.trim()};
+  // send to server, server will echo back to update chat
+  if(wsRef.current&&wsRef.current.readyState===1)wsRef.current.send(JSON.stringify({type:"chat",from:SA(wAddr),text:chatMsg.trim()}));
+  setChatMsg("");
+},[chatMsg,wAddr]);
   const placeBet=useCallback((agentId,amt,type)=>{if(!wAddr)return setWErr("Connect wallet to bet");const a=agents.find(x=>x.id===agentId);if(!a)return;const amount=parseFloat(amt)||0;if(amount<=0)return setWErr("Enter a valid amount");setBets(p=>[{id:U(),agentId,agentName:a.name,fw:a.framework,type,bettor:wAddr,amount,placed:Date.now()},...p].slice(0,100));evR.current=[{t:Date.now(),type:"spec",text:`🎲 ${SA(wAddr)} bet ◎${amount} on ${a.name} (${type})`,ids:[agentId],chain:true},...evR.current].slice(0,300);setEvLog([...evR.current]);},[wAddr,agents]);
   const sponsorAgent=useCallback((agentId,amt)=>{if(!wAddr)return setWErr("Connect wallet to sponsor");const a=agents.find(x=>x.id===agentId);if(!a)return;const amount=parseFloat(amt)||0;if(amount<=0)return setWErr("Enter a valid amount");setSponsors(p=>[{id:U(),agentId,agentName:a.name,fw:a.framework,sponsor:wAddr,amount,share:.1,since:Date.now()},...p].slice(0,50));evR.current=[{t:Date.now(),type:"spec",text:`💎 ${SA(wAddr)} sponsors ${a.name} for ◎${amount}`,ids:[agentId],chain:true},...evR.current].slice(0,300);setEvLog([...evR.current]);},[wAddr,agents]);
   // Track active fights from event log
   const activeFights=evLog.filter(e=>e.type==="combat"&&Date.now()-e.t<30000).slice(0,10);
   const StatusBadge=({status})=>{const cfg={npc:{color:K.mu,label:"Demo NPC",icon:"🤖"},live:{color:"#22ff88",label:"LIVE",icon:"🟢"},offline:{color:"#ff6b4a",label:"Offline",icon:"💤"}};const s=cfg[status]||cfg.npc;return <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",fontSize:9,borderRadius:4,background:s.color+"18",color:s.color,border:`1px solid ${s.color}33`}}>{s.icon} {s.label}</span>;};
   // Reusable amount input component
-  const AmtInput=({id,placeholder,color,onSubmit,btnLabel})=>{const[v,setV]=useState("");return <div style={{display:"flex",gap:3}}><input value={v} onChange={e=>setV(e.target.value)} placeholder={placeholder||"◎ amount"} style={{flex:1,padding:"4px 6px",background:K.bg,border:`1px solid ${K.bd}`,borderRadius:4,color:K.tx,fontFamily:"inherit",fontSize:9,outline:"none",width:0,minWidth:0}} onKeyDown={e=>{if(e.key==="Enter"){onSubmit(v);setV("");}}}/><button onClick={()=>{onSubmit(v);setV("");}} style={{padding:"4px 8px",background:color+"18",color,fontSize:8,fontFamily:"inherit",border:`1px solid ${color}22`,borderRadius:4,cursor:"pointer",whiteSpace:"nowrap"}}>{btnLabel}</button></div>;};
+  const AmtInput=({id,placeholder,color,onSubmit,btnLabel})=>{const[v,setV]=useState("");return <div style={{display:"flex",gap:3}}><input value={v} onChange={e=>setV(e.target.value)} placeholder={placeholder||"◎ amount"} style={{flex:1,padding:"4px 6px",background:K.bg,border:`1px solid ${K.bd}`,borderRadius:4,color:K.tx,fontFamily:"inherit",fontSize:9,outline:"none"}} onKeyDown={e=>{if(e.key==="Enter"){onSubmit(v);setV("");}}}/><button onClick={()=>{onSubmit(v);setV("");}} style={{padding:"4px 8px",background:color+"18",color,fontSize:8,fontFamily:"inherit",border:`1px solid ${color}22`,borderRadius:4,cursor:"pointer",whiteSpace:"nowrap"}}>{btnLabel}</button></div>;};
   const dot=c=>({width:8,height:8,borderRadius:"50%",background:c,boxShadow:`0 0 6px ${c}`,flexShrink:0,display:"inline-block"});
   const tag=(c,bg)=>({display:"inline-block",padding:"2px 8px",fontSize:10,borderRadius:100,color:c,background:bg,border:`1px solid ${c}22`,marginRight:4,marginBottom:4});
   const onlineCount=agents.length,ocCount=agents.filter(a=>a.framework==="OpenClaw").length,ezCount=agents.filter(a=>a.framework==="ElizaOS").length;
@@ -695,7 +806,7 @@ export default function App(){
           {!isMobile&&<><span style={{fontSize:10,color:K.mu,marginLeft:4}}>v1.1</span><span style={{fontSize:8,color:K.wa,marginLeft:4,padding:"1px 5px",background:"rgba(255,107,74,0.1)",borderRadius:3}}>mainnet</span></>}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:isMobile?4:6}}>
-          {wAddr&&<div style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:K.sD,borderRadius:5,fontSize:10}}><div style={{width:5,height:5,borderRadius:"50%",background:K.ac}}/><span style={{color:K.so}}>◎{wBal.toFixed(3)}</span>{!isMobile&&<span style={{color:K.mu}}>{SA(wAddr)}</span>}</div>}
+          {wAddr&&<div style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:K.sD,borderRadius:5,fontSize:10}}><div style={{width:5,height:5,borderRadius:"50%",background:K.ac}}/><span style={{color:K.so}}>◎{wBal.toFixed(6)}</span>{!isMobile&&<span style={{color:K.mu}}>{SA(wAddr)}</span>}</div>}
           {/* contract address always visible; truncated on mobile */}
           <div style={{position:"relative",display:"flex",alignItems:"center",marginLeft:8}}>
             <span onClick={copyToClipboard} style={{fontFamily:"monospace",color:copied?K.ac:K.dm,cursor:"pointer",fontSize:isMobile?9:10,whiteSpace:"nowrap",userSelect:"all"}}>
@@ -731,7 +842,7 @@ export default function App(){
             <span style={{width:8,height:8,borderRadius:"50%",background:"#ff2222",boxShadow:"0 0 8px #ff2222",animation:"pulse 1.5s infinite"}}></span>
             <span style={{fontSize:11,fontWeight:600,color:"#ff2222",letterSpacing:1.5}}>LIVE</span>
           </div>
-          <div style={{position:"absolute",bottom:12,left:12,display:"flex",gap:6,zIndex:5}}>
+          <div style={{position:"absolute",bottom:12,left:12,display:"flex",alignItems:"center",gap:6,zIndex:5}}>
             <button style={{padding:"6px 12px",background:autoRot?"rgba(0,255,163,0.15)":"rgba(255,255,255,0.08)",border:`1px solid ${autoRot?K.ac+"44":K.bd}`,borderRadius:6,color:autoRot?K.ac:K.mu,fontSize:10,fontFamily:"inherit",cursor:"pointer"}} onClick={()=>setAutoRot(!autoRot)}>🔄 {autoRot?"Auto":"Manual"}</button>
             <button style={{padding:"6px 10px",background:muted?"rgba(255,255,255,0.08)":"rgba(153,69,255,0.15)",border:`1px solid ${muted?K.bd:K.so+"44"}`,borderRadius:6,color:muted?K.mu:K.so,fontSize:10,fontFamily:"inherit",cursor:"pointer",display:"flex",alignItems:"center",gap:4}} onClick={()=>{if(muted&&audioRef.current){audioRef.current.play().catch(()=>{});}setMuted(!muted);}}>{muted?"🔇":"🔊"}{!isMobile&&(muted?"Off":"On")}</button>
             {!muted&&<input type="range" min="0" max="100" value={Math.round(volume*100)} onChange={e=>{setVolume(e.target.value/100);}} style={{width:60,accentColor:K.so,height:4,cursor:"pointer"}}/>}
@@ -779,7 +890,7 @@ export default function App(){
 
             {sTab==="act"&&<div>
               {!wAddr&&<div style={{padding:12,background:"rgba(255,107,74,0.08)",border:"1px solid rgba(255,107,74,0.2)",borderRadius:8,marginBottom:12,fontSize:11,color:K.wa,textAlign:"center"}}>👛 Connect wallet<br/><button onClick={connectW} style={{marginTop:8,padding:"6px 16px",background:K.so,color:"#fff",fontFamily:"inherit",fontSize:11,border:"none",borderRadius:5,cursor:"pointer"}}>Connect</button></div>}
-              {wAddr&&<div style={{background:K.cd,border:`1px solid ${K.so}22`,borderRadius:8,padding:10,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:16,fontWeight:500,color:K.so}}>◎{wBal.toFixed(3)}</div><div style={{fontSize:9,color:K.mu}}>{SA(wAddr)}</div></div><button onClick={disconnectW} style={{fontSize:9,color:K.mu,background:"none",border:`1px solid ${K.bd}`,borderRadius:4,padding:"3px 8px",cursor:"pointer",fontFamily:"inherit"}}>×</button></div>}
+              {wAddr&&<div style={{background:K.cd,border:`1px solid ${K.so}22`,borderRadius:8,padding:10,marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:16,fontWeight:500,color:K.so}}>◎{wBal.toFixed(6)}</div><div style={{fontSize:9,color:K.mu}}>{SA(wAddr)}</div></div><button onClick={disconnectW} style={{fontSize:9,color:K.mu,background:"none",border:`1px solid ${K.bd}`,borderRadius:4,padding:"3px 8px",cursor:"pointer",fontFamily:"inherit"}}>×</button></div>}
               <div style={{fontSize:9,color:K.mu,letterSpacing:1,marginBottom:4}}>ITEMS ◎{FEES.dropItem}</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginBottom:10}}>
                 {[{id:"energy",n:"🔋 Energy",c:K.ac},{id:"spd",n:"💨 Speed",c:K.bl},{id:"shield",n:"🛡️ Shield",c:K.ye},{id:"mystery",n:"📦 Mystery",c:K.wa}].map(it=><div key={it.id} style={{padding:6,background:K.cd,border:`1px solid ${K.bd}`,borderRadius:6,cursor:wAddr?"pointer":"not-allowed",opacity:wAddr?1:.5,fontSize:10,textAlign:"center"}} onClick={()=>{if(!wAddr)return setWErr("Connect wallet");spectate("drop",it.id);}}>{it.n}</div>)}
@@ -931,7 +1042,7 @@ export default function App(){
 
             {sTab==="agents"&&<div>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                <div style={{fontSize:9,color:K.mu,letterSpacing:1}}>🏆 LEADERBOARD</div>
+                <div style={{fontSize:9,color:K.mu,letterSpacing:1}}>🏆 TOP EARNERS</div>
                 <div style={{fontSize:8,color:K.mu}}>{sorted.length} agents</div>
               </div>
               <input value={agentSearch} onChange={e=>setAgentSearch(e.target.value)} placeholder="🔍 Search agents..." style={{width:"100%",padding:"6px 10px",background:K.bg,border:`1px solid ${K.bd}`,borderRadius:6,color:K.tx,fontFamily:"inherit",fontSize:10,outline:"none",marginBottom:8,boxSizing:"border-box"}}/>
@@ -972,7 +1083,7 @@ export default function App(){
           <span style={{color:K.bd}}>|</span>
           <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{color:K.so}}>{spectators}</span><span style={{color:K.mu}}>{isMobile?"viewers":"spectators"}</span></div>
           <span style={{color:K.bd}}>|</span>
-          <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{color:K.ye}}>{totalJoined}</span><span style={{color:K.mu}}>{isMobile?"total":"total AI created"}</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:3}}><span style={{color:K.ye}}>{totalJoined}</span><span style={{color:K.mu}}>{isMobile?"total":"total AI joined"}</span></div>
           {!isMobile&&<><span style={{color:K.bd}}>|</span>
           <span style={{color:K.mu}}>Tick #{ticks}</span>
           <span style={{color:K.bd}}>|</span>
