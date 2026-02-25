@@ -704,9 +704,11 @@ export default function App(){
             {copied&&<div style={{position:"absolute",top:"50%",right:"100%",transform:"translate(0,-50%)",marginRight:6,padding:"4px 8px",background:K.ac,color:"#000",borderRadius:4,fontSize:11}}>Copied</div>}
           </div>
 
-          {/* X logo link */}
-          <a href="https://x.com/ClawAITown" target="_blank" rel="noopener noreferrer" style={{marginLeft:8,display:"flex",alignItems:"center"}}>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/X_logo.png" alt="X" style={{width:isMobile?18:20,height:isMobile?18:20}} onError={e=>{e.style.display='none';}} />
+          {/* X logo link using FontAwesome Xing icon */}
+          <a href="https://x.com/ClawAITown" target="_blank" rel="noopener noreferrer" style={{marginLeft:12,display:"flex",alignItems:"center"}}>
+            <svg viewBox="0 0 1792 1792" width={isMobile?18:20} height={isMobile?18:20} fill={K.ac} xmlns="http://www.w3.org/2000/svg">
+              <path d="M640 1376q0-26-19-45L320 1080q-19-19-19-45t19-45l301-301-301-301q-19-19-19-45t19-45l301-301q19-19 45-19t45 19l301 301 301-301q19-19 45-19t45 19l301 301q19 19 19 45t-19 45l-301 301 301 301q19 19 19 45t-19 45l-301 301q-19 19-45 19t-45-19l-301-301-301 301q-19 19-45 19t-45-19l-301-301q-19-19-19-45z"/>
+            </svg>
           </a>
 
           {/* navigation buttons */}
