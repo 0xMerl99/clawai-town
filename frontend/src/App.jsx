@@ -710,11 +710,13 @@ export default function App(){
           </a>
 
           {/* navigation buttons */}
-          {[{key:"world",icon:"🌐",label:"World"},{key:"docs",icon:"📖",label:"Docs"}].map(item=>
-            <div key={item.key} style={{display:"flex",alignItems:"center",padding:isMobile?"5px 8px":"6px 12px",cursor:"pointer",fontSize:isMobile?10:11,color:tab===item.key?K.ac:K.dm,borderRadius:5,background:tab===item.key?K.aD:"transparent",border:`1px solid ${tab===item.key?"rgba(0,255,163,0.12)":"transparent"}`}} onClick={()=>setTab(item.key)}>
-              <span>{item.icon}</span>{!isMobile&&<span style={{marginLeft:4}}>{item.label}</span>}
-            </div>
-          )}
+          <div style={{display:"flex",alignItems:"center",gap:12,marginLeft:12}}>
+            {[{key:"world",icon:"🌐",label:"World"},{key:"docs",icon:"📖",label:"Docs"}].map(item=>
+              <div key={item.key} style={{display:"flex",alignItems:"center",padding:isMobile?"5px 8px":"6px 12px",cursor:"pointer",fontSize:isMobile?10:11,color:tab===item.key?K.ac:K.dm,borderRadius:5,background:tab===item.key?K.aD:"transparent",border:`1px solid ${tab===item.key?"rgba(0,255,163,0.12)":"transparent"}`}} onClick={()=>setTab(item.key)}>
+                <span>{item.icon}</span>{!isMobile&&<span style={{marginLeft:6}}>{item.label}</span>}
+              </div>
+            )}
+          </div>
 
           <button style={{padding:isMobile?"5px 8px":"6px 14px",background:"linear-gradient(135deg, #ff2222, #ff8800)",color:"#fff",fontFamily:"inherit",fontSize:isMobile?9:11,fontWeight:600,border:"none",borderRadius:5,cursor:"pointer",whiteSpace:"nowrap"}} onClick={()=>setShowGuide(true)}>🦞 {isMobile?"Join":"Join the World"}</button>
           {isMobile&&<button style={{padding:"5px 7px",background:showSidebar?K.ac+"22":K.cd,color:showSidebar?K.ac:K.dm,fontFamily:"inherit",fontSize:11,border:`1px solid ${showSidebar?K.ac+"44":K.bd}`,borderRadius:5,cursor:"pointer"}} onClick={()=>setShowSidebar(!showSidebar)}>{showSidebar?"✕":"☰"}</button>}
