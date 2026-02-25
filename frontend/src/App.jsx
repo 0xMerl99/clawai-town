@@ -444,7 +444,28 @@ function World({agents,buildings,resources,wEvts,items,selAgent,onSel,autoRotate
         if(checkCollision(mg.g.position))mg.g.position.copy(mg.prevPos||ag);else mg.prevPos={x:mg.g.position.x,z:mg.g.position.z};
 
         // ── OCCLUSION: hide name label if building blocks camera view ──
-        let nameVis=true;if(mg.labelSprite&&buildingColliders.length>0){const agPos=new THREE.Vector3(ag.x,ag.y+1,ag.z);const camPos=c.position.clone();const dir=camPos.clone().sub(agPos).normalize();const distToCam=agPos.distanceTo(camPos);const rayOrigin=agPos.clone().add(dir.clone().multiplyScalar(.2));const rayDir=dir.clone().negate();for(const b of buildingColliders){const bmin=new THREE.Vector3(b.x-b.w/2,0,b.z-b.d/2),bmax=new THREE.Vector3(b.x+b.w/2,10,b.z+b.d/2);const invDir={x:rayDir.x!==0?1/rayDir.x:1e10,y:rayDir.y!==0?1/rayDir.y:1e10,z:rayDir.z!==0?1/rayDir.z:1e10};const t1={x:(bmin.x-rayOrigin.x)*invDir.x,y:(bmin.y-rayOrigin.y)*invDir.y,z:(bmin.z-rayOrigin.z)*invDir.z};const t2={x:(bmax.x-rayOrigin.x)*invDir.x,y:(bmax.y-rayOrigin.y)*invDir.y,z:(bmax.z-rayOrigin.z)*invDir.z};const tmin=Math.max(Math.min(t1.x,t2.x),Math.min(t1.y,t2.y),Math.min(t1.z,t2.z));const tmax=Math.min(Math.max(t1.x,t2.x),Math.max(t1.y,t2.y),Math.max(t1.z,t2.z));if(tmin<=tmax&&tmax>=0&&tmin<distToCam){nameVis=false;break;}}}mg.labelSprite.visible=nameVis;}
+        if(mg.labelSprite&&buildingColliders.length>0){
+          const agPos=new THREE.Vector3(ag.x,ag.y+1,ag.z);
+          const camPos=c.position.clone();
+          const dir=camPos.clone().sub(agPos).normalize();
+          const distToCam=agPos.distanceTo(camPos);
+          const rayOrigin=agPos.clone().add(dir.clone().multiplyScalar(.2));
+          const rayDir=dir.clone().negate();
+          let nameVis=true;
+          for(const b of buildingColliders){
+            const bmin=new THREE.Vector3(b.x-b.w/2,0,b.z-b.d/2);
+            const bmax=new THREE.Vector3(b.x+b.w/2,10,b.z+b.d/2);
+            const invDir={x:rayDir.x!==0?1/rayDir.x:1e10,y:rayDir.y!==0?1/rayDir.y:1e10,z:rayDir.z!==0?1/rayDir.z:1e10};
+            const t1={x:(bmin.x-rayOrigin.x)*invDir.x,y:(bmin.y-rayOrigin.y)*invDir.y,z:(bmin.z-rayOrigin.z)*invDir.z};
+            const t2={x:(bmax.x-rayOrigin.x)*invDir.x,y:(bmax.y-rayOrigin.y)*invDir.y,z:(bmax.z-rayOrigin.z)*invDir.z};
+            const tmin=Math.max(Math.min(t1.x,t2.x),Math.min(t1.y,t2.y),Math.min(t1.z,t2.z));
+            const tmax=Math.min(Math.max(t1.x,t2.x),Math.max(t1.y,t2.y),Math.max(t1.z,t2.z));
+            if(tmin<=tmax&&tmax>=0&&tmin<distToCam){nameVis=false;break;}
+          }
+          mg.labelSprite.visible=nameVis;
+        }else if(mg.labelSprite){
+          mg.labelSprite.visible=true;
+        }
 
         // ── UPDATE NAME + EMOJI LABEL (throttled — only redraw when content changes) ──
         if(mg.labelCtx){
