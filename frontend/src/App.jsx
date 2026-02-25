@@ -277,8 +277,6 @@ function World({agents,buildings,resources,wEvts,items,selAgent,onSel,autoRotate
         }
       }
     });
-    // Collect building collision boxes for agent pathfinding
-    const buildingColliders=buildings.map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}));
     s.add(new THREE.AmbientLight(0x2a2a3a,.7));const dl=new THREE.DirectionalLight(0x6666aa,.5);dl.position.set(20,30,20);dl.castShadow=true;dl.shadow.mapSize.set(1024,1024);dl.shadow.camera.left=-40;dl.shadow.camera.right=40;dl.shadow.camera.top=40;dl.shadow.camera.bottom=-40;s.add(dl);
     [[-12,6,-12,0xff2222,1.5],[12,5,12,0xff8800,1],[12,5,-10,0xff4422,.8],[0,8,0,0xffd84d,.6]].forEach(([x,y,z,cl,i])=>{const l=new THREE.PointLight(cl,i,30);l.position.set(x,y,z);s.add(l);});
     const onClick=e=>{if(drag.current.active)return;const rc=el.getBoundingClientRect();mo.current.x=((e.clientX-rc.left)/rc.width)*2-1;mo.current.y=-((e.clientY-rc.top)/rc.height)*2+1;ray.current.setFromCamera(mo.current,c);const ms=Object.values(am.current).map(a=>a.hb).filter(Boolean);const ht=ray.current.intersectObjects(ms);if(ht.length)onSel(ht[0].object.userData.aid);};r.domElement.addEventListener("click",onClick);
@@ -298,6 +296,8 @@ function World({agents,buildings,resources,wEvts,items,selAgent,onSel,autoRotate
   },[]);
   useEffect(()=>{let run=true;const s=scn.current,c=cam.current,r=ren.current;if(!s||!c||!r)return;
     const loop=()=>{if(!run)return;fr.current++;const t=fr.current*.01;
+      // Collision detection for buildings
+      const buildingColliders=buildings.map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}));
       agents.forEach(ag=>{let mg=am.current[ag.id];if(!mg){const g=new THREE.Group();
         const bm=new THREE.MeshStandardMaterial({color:new THREE.Color(ag.color),emissive:new THREE.Color(ag.color),emissiveIntensity:.4,roughness:.4,metalness:.6});
         const bm2=new THREE.MeshStandardMaterial({color:new THREE.Color(ag.color).multiplyScalar(.7),emissive:new THREE.Color(ag.color),emissiveIntensity:.2,roughness:.5,metalness:.5});
