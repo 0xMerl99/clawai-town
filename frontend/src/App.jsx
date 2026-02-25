@@ -99,6 +99,7 @@ class SolEng{
   }
 }
 
+
 // World gen
 function mkBuildings(){const b=[];const bNames={
   "Trading District":["SOL Exchange","Crypto Bazaar","Token Mart","Trade Hub","Swap House","Mint Shop","DeFi Bank","NFT Gallery"],
@@ -453,6 +454,14 @@ export default function App(){
   const[wAddr,setWAddr]=useState(null),[wBal,setWBal]=useState(0),[solOk,setSolOk]=useState(false),[wErr,setWErr]=useState(null);
   const[autoRot,setAutoRot]=useState(true),[showSidebar,setShowSidebar]=useState(false),[chat,setChat]=useState([]),[chatMsg,setChatMsg]=useState("");
   const[volume,setVolume]=useState(0.3),[muted,setMuted]=useState(true);
+  // contract address copy state
+  const [copied, setCopied] = useState(false);
+  const CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112";
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(CONTRACT_ADDRESS);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const audioRef=useRef(null);
   const[feedPaused,setFeedPaused]=useState(false),[pausedEvLog,setPausedEvLog]=useState([]),[newEvCount,setNewEvCount]=useState(0);
   const[chatPaused,setChatPaused]=useState(false),[pausedChat,setPausedChat]=useState([]),[newMsgCount,setNewMsgCount]=useState(0);
@@ -687,6 +696,15 @@ export default function App(){
         </div>
         <div style={{display:"flex",alignItems:"center",gap:isMobile?4:6}}>
           {wAddr&&<div style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:K.sD,borderRadius:5,fontSize:10}}><div style={{width:5,height:5,borderRadius:"50%",background:K.ac}}/><span style={{color:K.so}}>◎{wBal.toFixed(3)}</span>{!isMobile&&<span style={{color:K.mu}}>{SA(wAddr)}</span>}</div>}
+          {/* contract address + copy */}
+          <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,marginLeft:4}}>
+            <span style={{fontFamily:"monospace",color:K.dm}}>{CONTRACT_ADDRESS.slice(0,4)+"..."+CONTRACT_ADDRESS.slice(-4)}</span>
+            <button onClick={copyToClipboard} style={{padding:"2px 6px",fontSize:9,borderRadius:3,border:`1px solid ${K.ac}`,background:copied?K.ac:K.pn,color:"#fff",cursor:"pointer"}}>{copied?"Copied":"Copy"}</button>
+          </div>
+          {/* twitter / x link */}
+          <a href="https://twitter.com/clawai" target="_blank" rel="noopener noreferrer" style={{fontSize:isMobile?10:12,color:K.ac,display:"flex",alignItems:"center",gap:4,marginLeft:4}}>
+            🐦 @clawai
+          </a>
           {["world","docs"].map(t=><div key={t} style={{padding:isMobile?"5px 8px":"6px 12px",cursor:"pointer",fontSize:isMobile?10:11,color:tab===t?K.ac:K.dm,borderRadius:5,background:tab===t?K.aD:"transparent",border:`1px solid ${tab===t?"rgba(0,255,163,0.12)":"transparent"}`}} onClick={()=>setTab(t)}>{t==="world"?"🌐 World":"📖 Docs"}</div>)}
           <button style={{padding:isMobile?"5px 8px":"6px 14px",background:"linear-gradient(135deg, #ff2222, #ff8800)",color:"#fff",fontFamily:"inherit",fontSize:isMobile?9:11,fontWeight:600,border:"none",borderRadius:5,cursor:"pointer",whiteSpace:"nowrap"}} onClick={()=>setShowGuide(true)}>🦞 {isMobile?"Join":"Join the World"}</button>
           {isMobile&&<button style={{padding:"5px 7px",background:showSidebar?K.ac+"22":K.cd,color:showSidebar?K.ac:K.dm,fontFamily:"inherit",fontSize:11,border:`1px solid ${showSidebar?K.ac+"44":K.bd}`,borderRadius:5,cursor:"pointer"}} onClick={()=>setShowSidebar(!showSidebar)}>{showSidebar?"✕":"☰"}</button>}
