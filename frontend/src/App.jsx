@@ -690,6 +690,7 @@ export default function App(){
   return(
     <div style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",background:K.bg,color:K.tx,fontFamily:"'Menlo','SF Mono',monospace",fontSize:13,overflow:"hidden"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:isMobile?"0 10px":"0 20px",height:48,borderBottom:`1px solid ${K.bd}`,background:K.pn,flexShrink:0,zIndex:10}}>
+        {copied&&<div style={{position:"fixed",top:52,right:20,padding:"6px 10px",background:K.ac,color:"#000",borderRadius:4,zIndex:30,fontSize:11}}>Copied</div>}
         <div style={{display:"flex",alignItems:"center",gap:6}}>
           <span style={{fontFamily:"Georgia,serif",fontSize:isMobile?16:20,fontWeight:400,color:K.ac,fontStyle:"italic"}}>ClawAI.Town</span>
           {!isMobile&&<><span style={{fontSize:10,color:K.mu,marginLeft:4}}>v1.1</span><span style={{fontSize:8,color:K.wa,marginLeft:4,padding:"1px 5px",background:"rgba(255,107,74,0.1)",borderRadius:3}}>mainnet</span></>}
@@ -703,10 +704,7 @@ export default function App(){
 
           {/* X logo link */}
           <a href="https://x.com/ClawAITown" target="_blank" rel="noopener noreferrer" style={{marginLeft:4,display:"flex",alignItems:"center"}}>
-            <svg viewBox="0 0 24 24" width={isMobile?18:20} height={isMobile?18:20} fill="none" stroke={K.ac} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="0" y1="0" x2="24" y2="24" />
-              <line x1="24" y1="0" x2="0" y2="24" />
-            </svg>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/X_logo.png" alt="X" style={{width:isMobile?18:20,height:isMobile?18:20}} />
           </a>
 
           {/* navigation buttons */}
