@@ -697,18 +697,16 @@ export default function App(){
         <div style={{display:"flex",alignItems:"center",gap:isMobile?4:6}}>
           {wAddr&&<div style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:K.sD,borderRadius:5,fontSize:10}}><div style={{width:5,height:5,borderRadius:"50%",background:K.ac}}/><span style={{color:K.so}}>◎{wBal.toFixed(3)}</span>{!isMobile&&<span style={{color:K.mu}}>{SA(wAddr)}</span>}</div>}
           {/* contract address always visible; truncated on mobile */}
-          <div style={{position:"relative",display:"inline-block",marginLeft:8}}>
+          <div style={{position:"relative",display:"flex",alignItems:"center",marginLeft:8}}>
             <span onClick={copyToClipboard} style={{fontFamily:"monospace",color:copied?K.ac:K.dm,cursor:"pointer",fontSize:isMobile?9:10,whiteSpace:"nowrap",userSelect:"all"}}>
               {isMobile?CONTRACT_ADDRESS.slice(0,4)+"..."+CONTRACT_ADDRESS.slice(-4):CONTRACT_ADDRESS}
             </span>
             {copied&&<div style={{position:"absolute",top:"50%",right:"100%",transform:"translate(0,-50%)",marginRight:6,padding:"4px 8px",background:K.ac,color:"#000",borderRadius:4,fontSize:11}}>Copied</div>}
           </div>
 
-          {/* X logo link using FontAwesome Xing icon */}
-          <a href="https://x.com/ClawAITown" target="_blank" rel="noopener noreferrer" style={{marginLeft:12,display:"flex",alignItems:"center"}}>
-            <svg viewBox="0 0 1792 1792" width={isMobile?18:20} height={isMobile?18:20} fill={K.ac} xmlns="http://www.w3.org/2000/svg">
-              <path d="M640 1376q0-26-19-45L320 1080q-19-19-19-45t19-45l301-301-301-301q-19-19-19-45t19-45l301-301q19-19 45-19t45 19l301 301 301-301q19-19 45-19t45 19l301 301q19 19 19 45t-19 45l-301 301 301 301q19 19 19 45t-19 45l-301 301q-19 19-45 19t-45-19l-301-301-301 301q-19 19-45 19t-45-19l-301-301q-19-19-19-45z"/>
-            </svg>
+          {/* X link using text icon for reliable display */}
+          <a href="https://x.com/ClawAITown" target="_blank" rel="noopener noreferrer" style={{marginLeft:16,display:"flex",alignItems:"center",fontSize:isMobile?18:20,color:K.ac,textDecoration:"none"}}>
+            ✖
           </a>
 
           {/* navigation buttons */}
